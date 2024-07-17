@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
-    private JwtRequestFilter jwtRequestFilter; // Autowire JwtRequestFilter directly
+    private JwtRequestFilter jwtRequestFilter;
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
@@ -51,7 +51,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Configure HttpSecurity as needed
         httpSecurity.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/*").permitAll()  // Allow all requests
+                .antMatchers("/api/v1/users/register", "/api/v1/users/login").permitAll() // Allow access to register and login
+                .antMatchers("/api/v1/users/profile").hasAnyRole("USER", "SUPER_ADMIN", "STAFF_ADMIN", "CONTROL_ADMIN") // Profile accessible to all roles
+                .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN") // Employee list accessible to Super Admin and Staff Admin
+                .antMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "CONTROL_ADMIN") // Role management accessible to Super Admin and Control Admin
+                .antMatchers("/dashboard").permitAll() // Allow access to dashboard
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
