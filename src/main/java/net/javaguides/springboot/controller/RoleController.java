@@ -22,13 +22,13 @@ public class RoleController {
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
-    @GetMapping
+    @GetMapping("/users")
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
-    @PutMapping("/{id}/role")
+    @PutMapping("/users/{id}/role")
     public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestParam String role) {
         userService.updateUserRole(id, role);
         return ResponseEntity.ok("User role updated successfully");

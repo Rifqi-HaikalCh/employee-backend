@@ -6,14 +6,18 @@ import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.repository.RoleRepository;
 import net.javaguides.springboot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -28,7 +32,7 @@ public class UserService {
 
     public User registerUser(UserDto userDto) {
         // Validate if user already exists
-        Optional<User> existingUser = Optional.ofNullable(userRepository.findByUsername(userDto.getUsername()));
+        Optional<User> existingUser = userRepository.findByUsername(userDto.getUsername());
         if (existingUser.isPresent()) {
             throw new RuntimeException("Username already exists");
         }
@@ -51,8 +55,15 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
+    }
+
     public User loginUser(UserDto userDto) {
-        Optional<User> optionalUser = Optional.ofNullable(userRepository.findByUsername(userDto.getUsername()));
+        Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
         User user = optionalUser.orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
         if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
@@ -79,7 +90,7 @@ public class UserService {
     }
 
     public void deleteUser(String username) {
-        Optional<User> optionalUser = Optional.ofNullable(userRepository.findByUsername(username));
+        Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
             userRepository.delete(optionalUser.get());
         } else {
@@ -88,6 +99,6 @@ public class UserService {
     }
 
     public Optional<User> findByUsername(String username) {
-        return Optional.ofNullable(userRepository.findByUsername(username));
+        return userRepository.findByUsername(username);
     }
 }

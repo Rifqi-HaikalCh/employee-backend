@@ -29,12 +29,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        // Configure AuthenticationManager to use UserDetails service and PasswordEncoder
-        auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
-    }
-
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
@@ -46,17 +40,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
+    }
+
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        // Configure HttpSecurity as needed
         httpSecurity.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/register", "/api/v1/users/login").permitAll() // Allow access to register and login
-                .antMatchers("/api/v1/users/profile").hasAnyRole("USER", "SUPER_ADMIN", "STAFF_ADMIN", "CONTROL_ADMIN") // Profile accessible to all roles
-                .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN") // Employee list accessible to Super Admin and Staff Admin
+                .antMatchers("/auth/**").permitAll() // Allow access to /auth endpoints
+                .antMatchers("/api/v1/users/profile").hasAnyRole("USER", "SUPER_ADMIN", "STAFF_ADMIN", "CONTROL_ADMIN") // Profile accessible to authenticated users with specific roles
+                .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN") // Employee endpoints accessible to Super Admin and Staff Admin
                 .antMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "CONTROL_ADMIN") // Role management accessible to Super Admin and Control Admin
                 .antMatchers("/dashboard").permitAll() // Allow access to dashboard
-                .anyRequest().authenticated()
+                .anyRequest().authenticated() // All other requests need to be authenticated
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()

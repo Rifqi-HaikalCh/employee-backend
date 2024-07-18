@@ -3,9 +3,11 @@ package net.javaguides.springboot.controller;
 import net.javaguides.springboot.dto.UserDto;
 import net.javaguides.springboot.model.JwtRequest;
 import net.javaguides.springboot.model.JwtResponse;
+import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.security.JwtTokenUtil;
 import net.javaguides.springboot.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,21 +32,39 @@ public class AuthController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+        // Authenticate user credentials
         authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+
+        // Load user details and generate JWT token
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
         final String token = jwtTokenUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new JwtResponse(token));
-    }
 
-    @GetMapping("/register")
-    public ResponseEntity<String> register() {
-        return ResponseEntity.ok("Hello World");
+        // Return JWT response
+        if (token != null) {
+            return ResponseEntity.ok(new JwtResponse(token));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> saveUser(@RequestBody UserDto user) {
-        user.setRole("USER"); // Set default role
-        return ResponseEntity.ok(userDetailsService.save(user));
+        // Check if username already exists
+        if (userDetailsService.usernameExists(user.getUsername())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+        }
+
+        // Validate password and confirmation
+        if (!user.getPassword().equals(user.getConfirmPassword())) {
+            return ResponseEntity.badRequest().body("Password and confirmation do not match");
+        }
+
+        // Set role for new user (in this case, role "USER")
+        user.setRole("USER");
+
+        // Save user and return response
+        User savedUser = userDetailsService.save(user);
+        return ResponseEntity.ok(savedUser);
     }
 
     private void authenticate(String username, String password) throws Exception {
@@ -55,5 +75,3 @@ public class AuthController {
         }
     }
 }
-
-
