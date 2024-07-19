@@ -4,7 +4,6 @@ import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.repository.RoleRepository;
 import net.javaguides.springboot.repository.UserRepository;
-import net.javaguides.springboot.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
@@ -52,7 +50,7 @@ public class JwtUserDetailsService implements UserDetailsService {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public User save(UserDto userDto) {
+    public User save(User userDto) {
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
