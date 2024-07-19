@@ -7,6 +7,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table(name = "jwt_response")
 public class JwtResponse implements Serializable {
@@ -18,14 +19,21 @@ public class JwtResponse implements Serializable {
     @Column(name = "jwttoken", nullable = false)
     private String jwttoken;
 
-    // Default constructor
-    public JwtResponse() {
-    }
+    @Column(name = "authenticated", nullable = false)
+    private boolean authenticated;
 
-    // Parameterized constructor
+    @Column(name = "roles", nullable = false)
+    private String roles;
+
+    // Parameterized constructor for token only
     public JwtResponse(String jwttoken) {
         this.jwttoken = jwttoken;
     }
 
-// Getter and Setter
+    // Parameterized constructor with additional fields
+    public JwtResponse(String jwttoken, boolean authenticated, String roles) {
+        this.jwttoken = jwttoken;
+        this.authenticated = authenticated;
+        this.roles = roles;
+    }
 }

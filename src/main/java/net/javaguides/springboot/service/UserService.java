@@ -9,12 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -101,4 +100,23 @@ public class UserService implements UserDetailsService {
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
+
+    public void initializeSuperAdmin() {
+        // Check if a Super Admin already exists
+        Optional<User> superAdmin = userRepository.findByRoleName("SUPER_ADMIN");
+        if (!superAdmin.isPresent()) {
+            User user = new User();
+            user.setUsername("superadmin");
+            user.setEmail("superadmin@example.com");
+            user.setPassword(passwordEncoder.encode("superadminpassword"));
+
+            // Set role to Super Admin
+            RoleEntity superAdminRole = roleRepository.findByName("SUPER_ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Super Admin role not found"));
+            user.setRole(superAdminRole);
+
+            userRepository.save(user);
+        }
+    }
 }
+

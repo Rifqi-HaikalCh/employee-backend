@@ -1,10 +1,11 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.dto.UserDto;
+import net.javaguides.springboot.model.User;
+import net.javaguides.springboot.repository.JwtResponseRepository;
+import net.javaguides.springboot.security.JwtTokenUtil;
 import net.javaguides.springboot.model.JwtRequest;
 import net.javaguides.springboot.model.JwtResponse;
-import net.javaguides.springboot.model.User;
-import net.javaguides.springboot.security.JwtTokenUtil;
 import net.javaguides.springboot.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,12 +23,14 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtUserDetailsService userDetailsService;
+    private final JwtResponseRepository jwtResponseRepository;
 
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, JwtUserDetailsService userDetailsService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, JwtUserDetailsService userDetailsService, JwtResponseRepository jwtResponseRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
+        this.jwtResponseRepository = jwtResponseRepository;
     }
 
     @PostMapping("/authenticate")
@@ -39,9 +42,19 @@ public class AuthController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
         final String token = jwtTokenUtil.generateToken(userDetails);
 
-        // Return JWT response
         if (token != null) {
-            return ResponseEntity.ok(new JwtResponse(token));
+            // Create JwtResponse object
+            JwtResponse jwtResponse = new JwtResponse(token);
+
+            // Optionally, you could populate other fields if needed
+            // jwtResponse.setAuthenticated(true);
+            // jwtResponse.setRoles("user_role"); // Set roles as needed
+
+            // Save JwtResponse object
+            jwtResponseRepository.save(jwtResponse);
+
+            // Return JWT response
+            return ResponseEntity.ok(jwtResponse);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
