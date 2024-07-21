@@ -37,7 +37,7 @@ public class UserService implements UserDetailsService {
         }
 
         // Validate password confirmation
-        if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
+        if (!userDto.getPassword().equals(userDto.getConfirmation())) {
             throw new RuntimeException("Passwords do not match");
         }
 
@@ -45,7 +45,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setConfirmation(passwordEncoder.encode(userDto.getConfirmPassword()));
+        user.setConfirmation(passwordEncoder.encode(userDto.getConfirmation()));
 
         // Set default role for new registrations
         RoleEntity defaultRole = roleRepository.findByName("USER")
