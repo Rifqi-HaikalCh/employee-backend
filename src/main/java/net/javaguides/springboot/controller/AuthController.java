@@ -1,10 +1,7 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.dto.UserDto;
-import net.javaguides.springboot.model.JwtRequest;
-import net.javaguides.springboot.model.JwtResponse;
-import net.javaguides.springboot.model.RoleEntity;
-import net.javaguides.springboot.model.User;
+import net.javaguides.springboot.model.*;
 import net.javaguides.springboot.security.JwtTokenUtil;
 import net.javaguides.springboot.service.JwtUserDetailsService;
 import net.javaguides.springboot.service.RoleService; // Assuming you have a RoleService for managing roles
@@ -14,11 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@RequestMapping("/auth")
 @RestController
 @CrossOrigin
 public class AuthController {
@@ -39,10 +34,13 @@ public class AuthController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) {
+        // Authenticate the user
         if (authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword())) {
-            // Load user details and generate JWT token
+            // Load user details
             final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-            final String token = jwtTokenUtil.generateToken(userDetails);
+
+            // Generate JWT token using username
+            final String token = jwtTokenUtil.generateToken(authenticationRequest.getUsername());
 
             // Get roles of the user
             String roles = userDetails.getAuthorities().toString();
@@ -59,28 +57,31 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> saveUser(@RequestBody UserDto userDto) {
-        // Check if username already exists
         if (userDetailsService.usernameExists(userDto.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 
-        // Validate password and confirmation
-        if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
+        if (!userDto.getPassword().equals(userDto.getConfirmation())) {
             return ResponseEntity.badRequest().body("Password and confirmation do not match");
         }
 
-        // Set role for new user
-        RoleEntity role = roleService.findByName(userDto.getRole());
+        AppRole roleEnum;
+        try {
+            roleEnum = AppRole.fromString(String.valueOf(userDto.getRole()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid role");
+        }
+
+        RoleEntity role = roleService.findByName(roleEnum.name());
         if (role == null) {
-            // Handle case where role does not exist (optional: create new role or return error)
             return ResponseEntity.badRequest().body("Role does not exist");
         }
 
-        // Create and save new user
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
         user.setPassword(userDto.getPassword());
+        user.setConfirmation(userDto.getConfirmation());
         user.setRole(role);
 
         User savedUser = userDetailsService.save(user);

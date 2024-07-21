@@ -1,6 +1,6 @@
 package net.javaguides.springboot.model;
 
-public enum Role {
+public enum AppRole {
     USER("User"),
     SUPER_ADMIN("Super Admin"),
     STAFF_ADMIN("Staff Admin"),
@@ -8,7 +8,7 @@ public enum Role {
 
     private final String displayName;
 
-    Role(String displayName) {
+    AppRole(String displayName) {
         this.displayName = displayName;
     }
 
@@ -16,9 +16,9 @@ public enum Role {
         return displayName;
     }
 
-    // Metode untuk mendapatkan Role dari String
-    public static Role fromString(String text) {
-        for (Role role : Role.values()) {
+    // Method untuk mendapatkan AppRole dari String
+    public static AppRole fromString(String text) {
+        for (AppRole role : AppRole.values()) {
             if (role.displayName.equalsIgnoreCase(text)) {
                 return role;
             }
