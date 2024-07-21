@@ -45,6 +45,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setConfirmation(passwordEncoder.encode(userDto.getConfirmPassword()));
 
         // Set default role for new registrations
         RoleEntity defaultRole = roleRepository.findByName("USER")

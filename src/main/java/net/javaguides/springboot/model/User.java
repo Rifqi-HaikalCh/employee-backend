@@ -23,6 +23,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String confirmation;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private RoleEntity role;

@@ -31,15 +31,14 @@ public class JwtUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username).get();
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found with username: " + username);
-        }
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("User not found with username: " + username)
+        );
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), getAuthorities(user));
     }
 
     public Optional<User> findByUsername(String username) {
-        return Optional.of(userRepository.findByUsername(username).get());
+        return userRepository.findByUsername(username);
     }
 
     public boolean usernameExists(String username) {
@@ -63,6 +62,7 @@ public class JwtUserDetailsService implements UserDetailsService {
         newUser.setUsername(userDto.getUsername());
         newUser.setEmail(userDto.getEmail());
         newUser.setPassword(bcryptEncoder.encode(userDto.getPassword()));
+        newUser.setConfirmation(bcryptEncoder.encode(userDto.getConfirmation()));
 
         RoleEntity defaultRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
@@ -78,5 +78,13 @@ public class JwtUserDetailsService implements UserDetailsService {
     @Autowired
     public void setBcryptEncoder(PasswordEncoder bcryptEncoder) {
         this.bcryptEncoder = bcryptEncoder;
+    }
+
+    // Method to get user data for token
+    public User getUserDetailsForToken(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("User not found with username: " + username)
+        );
+        return user;
     }
 }

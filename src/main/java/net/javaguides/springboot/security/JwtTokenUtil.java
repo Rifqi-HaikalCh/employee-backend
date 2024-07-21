@@ -3,6 +3,9 @@ package net.javaguides.springboot.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import net.javaguides.springboot.model.User;
+import net.javaguides.springboot.service.JwtUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -15,6 +18,9 @@ import java.util.function.Function;
 
 @Component
 public class JwtTokenUtil implements Serializable {
+
+    @Autowired
+    private JwtUserDetailsService userDetailsService;
 
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 
@@ -48,13 +54,20 @@ public class JwtTokenUtil implements Serializable {
         return expiration.before(new Date());
     }
 
-    // Generate token for user
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(String username) {
+        // Ambil detail pengguna dari JwtUserDetailsService
+        User user = userDetailsService.getUserDetailsForToken(username);
+
+        // Buat klaim
         Map<String, Object> claims = new HashMap<>();
-        return doGenerateToken(claims, userDetails.getUsername());
+        claims.put("username", user.getUsername());
+        claims.put("email", user.getEmail());
+        claims.put("role_id", user.getRole().getId()); // Pastikan bahwa role ada dan memiliki ID
+
+        // Hasilkan token dengan klaim
+        return doGenerateToken(claims, username);
     }
 
-    // Create token based on claims and subject (username)
     private String doGenerateToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)

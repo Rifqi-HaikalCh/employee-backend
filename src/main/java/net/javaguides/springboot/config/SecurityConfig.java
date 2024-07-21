@@ -49,11 +49,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/auth/**").permitAll() // Allow access to /auth endpoints
-                .antMatchers("/api/v1/users/profile").hasAnyRole("USER", "SUPER_ADMIN", "STAFF_ADMIN", "CONTROL_ADMIN") // Profile accessible to authenticated users with specific roles
-                .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN") // Employee endpoints accessible to Super Admin and Staff Admin
-                .antMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "CONTROL_ADMIN") // Role management accessible to Super Admin and Control Admin
-                .antMatchers("/dashboard").permitAll() // Allow access to dashboard
+                .antMatchers("/auth/**").permitAll()
+                .antMatchers("/api/v1/users/profile").permitAll()
+                .antMatchers("/dashboard").permitAll()
+                .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN")
+                .antMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "CONTROL_ADMIN")
                 .anyRequest().authenticated() // All other requests need to be authenticated
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
