@@ -1,10 +1,14 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.dto.UserDto;
-import net.javaguides.springboot.model.*;
+import net.javaguides.springboot.model.RoleEntity;
+import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.security.JwtTokenUtil;
+import net.javaguides.springboot.service.AccessService;
 import net.javaguides.springboot.service.JwtUserDetailsService;
-import net.javaguides.springboot.service.RoleService; // Assuming you have a RoleService for managing roles
+import net.javaguides.springboot.service.RoleService;
+import net.javaguides.springboot.model.JwtResponse;
+import net.javaguides.springboot.model.JwtRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +16,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RequestMapping("/auth")
 @RestController
@@ -21,39 +27,36 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtUserDetailsService userDetailsService;
-    private final RoleService roleService; // Service to handle roles
+    private final RoleService roleService;
+    private final AccessService accessService;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil,
-                          JwtUserDetailsService userDetailsService, RoleService roleService) {
+                          JwtUserDetailsService userDetailsService, RoleService roleService, AccessService accessService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
         this.roleService = roleService;
+        this.accessService = accessService;
     }
 
+    // In AuthController
     @PostMapping("/authenticate")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) {
-        // Authenticate the user
         if (authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword())) {
-            // Load user details
             final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-
-            // Generate JWT token using username
             final String token = jwtTokenUtil.generateToken(authenticationRequest.getUsername());
+            User user = userDetailsService.findByUsername(authenticationRequest.getUsername()).get();
 
-            // Get roles of the user
-            String roles = userDetails.getAuthorities().toString();
+            Map<String, Boolean> accessMap = accessService.getUserAccess(user.getId());
 
-            // Return JWT response with token and roles
-            JwtResponse response = new JwtResponse(token, true, roles);
-            return ResponseEntity.ok(response);
+            // Ensure email is included in the response
+            return ResponseEntity.ok(new JwtResponse(token, true, userDetails.getAuthorities().toString(), user.getEmail(), accessMap));
         } else {
-            // Return response for unauthorized access
-            JwtResponse response = new JwtResponse("", false, "");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new JwtResponse("", false, "", null, null));
         }
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<?> saveUser(@RequestBody UserDto userDto) {
@@ -61,20 +64,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 
+        if (userDetailsService.emailExists(userDto.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+        }
+
         if (!userDto.getPassword().equals(userDto.getConfirmation())) {
             return ResponseEntity.badRequest().body("Password and confirmation do not match");
-        }
-
-        AppRole roleEnum;
-        try {
-            roleEnum = AppRole.fromString(String.valueOf(userDto.getRole()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role");
-        }
-
-        RoleEntity role = roleService.findByName(roleEnum.name());
-        if (role == null) {
-            return ResponseEntity.badRequest().body("Role does not exist");
         }
 
         User user = new User();
@@ -82,6 +77,8 @@ public class AuthController {
         user.setEmail(userDto.getEmail());
         user.setPassword(userDto.getPassword());
         user.setConfirmation(userDto.getConfirmation());
+
+        RoleEntity role = roleService.findByName("USER");
         user.setRole(role);
 
         User savedUser = userDetailsService.save(user);

@@ -3,27 +3,18 @@ package net.javaguides.springboot.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
-@Entity
-@Table(name = "jwt_response")
 public class JwtResponse implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "jwttoken", nullable = false)
     private String jwttoken;
-
-    @Column(name = "authenticated", nullable = false)
     private boolean authenticated;
-
-    @Column(name = "roles", nullable = false)
     private String roles;
+    private String email; // Add email if it is returned in the response
+    private Map<String, Boolean> accessMap;
 
     // Parameterized constructor for token only
     public JwtResponse(String jwttoken) {
@@ -31,9 +22,11 @@ public class JwtResponse implements Serializable {
     }
 
     // Parameterized constructor with additional fields
-    public JwtResponse(String jwttoken, boolean authenticated, String roles) {
+    public JwtResponse(String jwttoken, boolean authenticated, String roles, String email, Map<String, Boolean> accessMap) {
         this.jwttoken = jwttoken;
         this.authenticated = authenticated;
         this.roles = roles;
+        this.email = email;
+        this.accessMap = accessMap;
     }
 }
