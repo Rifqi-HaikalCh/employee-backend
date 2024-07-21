@@ -1,16 +1,8 @@
 package net.javaguides.springboot.controller;
 
-import net.javaguides.springboot.dto.UserDto;
+import net.javaguides.springboot.dto.UserProfileDto;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +28,19 @@ public class UserController {
     public ResponseEntity<?> getUserProfile(Principal principal) {
         Optional<User> optionalUser = userService.findByUsername(principal.getName());
         if (optionalUser.isPresent()) {
-            return ResponseEntity.ok(optionalUser.get());
+            User user = optionalUser.get();
+            // Create a DTO to send only necessary fields
+            UserProfileDto userProfileDto = new UserProfileDto(
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getRole().getName()
+            );
+            return ResponseEntity.ok(userProfileDto);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
 
-    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/profile")
     public ResponseEntity<?> deleteProfile(Principal principal) {
         try {
