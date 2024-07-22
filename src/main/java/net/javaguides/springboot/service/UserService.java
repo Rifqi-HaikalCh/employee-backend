@@ -2,6 +2,8 @@ package net.javaguides.springboot.service;
 
 import net.javaguides.springboot.dto.UserDto;
 import net.javaguides.springboot.dto.UserProfileDto;
+import net.javaguides.springboot.dto.UserRoleDto;
+import net.javaguides.springboot.exception.UserNotFoundException;
 import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.repository.RoleRepository;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -78,14 +80,16 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserRoleDto> getAllUserRoles() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserRoleDto(user.getId(), user.getUsername(), user.getRole().getDisplayName()))
+                .collect(Collectors.toList());
     }
 
-    public void updateUserRole(Long id, String roleName) {
+    public void updateUserRole(Long id, Long roleId) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        RoleEntity role = roleRepository.findByName(roleName)
+        RoleEntity role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRole(role);
         userRepository.save(user);
@@ -97,15 +101,17 @@ public class UserService implements UserDetailsService {
         userRepository.delete(user);
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
 
     public UserProfileDto getUserProfile(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
-
-        return new UserProfileDto(user.getUsername(), user.getEmail(), user.getRole().getDisplayName());
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    UserProfileDto userProfileDto = new UserProfileDto();
+                    userProfileDto.setUsername(user.getUsername());
+                    userProfileDto.setEmail(user.getEmail());
+                    userProfileDto.setRole(user.getRole().getDisplayName());
+                    return userProfileDto;
+                })
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
 }

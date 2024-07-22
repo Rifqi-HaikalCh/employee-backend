@@ -1,6 +1,8 @@
 package net.javaguides.springboot.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import net.javaguides.springboot.service.JwtUserDetailsService;
+import net.javaguides.springboot.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -9,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import io.jsonwebtoken.ExpiredJwtException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -44,16 +45,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtTokenUtil.getUsernameFromToken(jwtToken);
             } catch (IllegalArgumentException e) {
-                logger.warning("Unable to get JWT Token");
+                logger.warning("Unable to get JWT Token: " + e.getMessage());
             } catch (ExpiredJwtException e) {
-                logger.warning("JWT Token has expired");
+                logger.warning("JWT Token has expired: " + e.getMessage());
             }
         } else {
-            logger.warning("JWT Token does not begin with Bearer String");
+            logger.warning("JWT Token does not begin with Bearer String. Token: " + requestTokenHeader);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(username);
 
             if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

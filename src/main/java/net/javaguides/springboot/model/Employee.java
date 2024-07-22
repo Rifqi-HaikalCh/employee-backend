@@ -26,7 +26,6 @@ public class Employee {
     private String emailId;
 
     @Column(name = "date_of_birth", nullable = false)
-    @Temporal(TemporalType.DATE)
     private Date dateOfBirth;
 
     // Getters and Setters

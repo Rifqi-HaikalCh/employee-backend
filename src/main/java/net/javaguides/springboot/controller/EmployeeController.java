@@ -6,15 +6,15 @@ import net.javaguides.springboot.service.AccessService;
 import net.javaguides.springboot.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/v1/employees")
 public class EmployeeController {
@@ -30,16 +30,14 @@ public class EmployeeController {
         this.userRepository = userRepository;
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @GetMapping
-    public List<Employee> getAllEmployees(Principal principal) {
-        Long userId = getUserId(principal.getName());
-        checkAccess(userId, "employeeList");
+    @GetMapping("/data")
+    public List<Employee> getAllEmployees() {
         return employeeService.getAllEmployees();
     }
 
+
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @PostMapping
+    @PostMapping("/cont/add")
     public Employee createEmployee(@RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");
@@ -47,7 +45,7 @@ public class EmployeeController {
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @PutMapping("/{id}")
+    @PutMapping("/cont/{id}")
     public Employee updateEmployee(@PathVariable Long id, @RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");
@@ -55,7 +53,7 @@ public class EmployeeController {
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/cont/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");

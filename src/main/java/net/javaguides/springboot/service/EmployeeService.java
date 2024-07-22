@@ -26,21 +26,25 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    public Employee updateEmployee(Long id, Employee employeeDetails) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + id));
-
-        employee.setFirstName(employeeDetails.getFirstName());
-        employee.setLastName(employeeDetails.getLastName());
-        employee.setEmailId(employeeDetails.getEmailId());
-        employee.setDateOfBirth(employeeDetails.getDateOfBirth());
-
-        return employeeRepository.save(employee);
+    public Employee updateEmployee(Long id, Employee employee) {
+        Optional<Employee> existingEmployeeOptional = employeeRepository.findById(id);
+        if (existingEmployeeOptional.isPresent()) {
+            Employee existingEmployee = existingEmployeeOptional.get();
+            existingEmployee.setFirstName(employee.getFirstName());
+            existingEmployee.setLastName(employee.getLastName());
+            existingEmployee.setEmailId(employee.getEmailId());
+            existingEmployee.setDateOfBirth(employee.getDateOfBirth());
+            return employeeRepository.save(existingEmployee);
+        } else {
+            throw new IllegalArgumentException("Employee not found with id: " + id);
+        }
     }
 
     public void deleteEmployee(Long id) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + id));
-        employeeRepository.delete(employee);
+        if (employeeRepository.existsById(id)) {
+            employeeRepository.deleteById(id);
+        } else {
+            throw new IllegalArgumentException("Employee not found with id: " + id);
+        }
     }
 }

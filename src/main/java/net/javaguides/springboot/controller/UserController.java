@@ -1,7 +1,7 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.dto.UserProfileDto;
-import net.javaguides.springboot.model.User;
+import net.javaguides.springboot.exception.UserNotFoundException; // Import the custom exception
 import net.javaguides.springboot.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +26,19 @@ public class UserController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
-    public UserProfileDto getUserProfile(Principal principal) {
-        return userService.getUserProfile(principal.getName());
+    public ResponseEntity<?> getUserProfile(Principal principal) {
+        Optional<String> optionalUsername = Optional.ofNullable(principal).map(Principal::getName);
+
+        return optionalUsername.map(username -> {
+            try {
+                UserProfileDto userProfile = userService.getUserProfile(username);
+                return ResponseEntity.ok(userProfile);
+            } catch (UserNotFoundException e) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving user profile");
+            }
+        }).orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access"));
     }
 
     @DeleteMapping("/profile")
@@ -36,8 +47,8 @@ public class UserController {
             userService.deleteUser(principal.getName());
             return ResponseEntity.ok("User deleted successfully");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete user: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete user: " + e.getMessage());
         }
     }
 }
-

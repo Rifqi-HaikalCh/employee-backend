@@ -22,7 +22,7 @@ public class JwtTokenUtil implements Serializable {
     @Autowired
     private JwtUserDetailsService userDetailsService;
 
-    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    public static final long JWT_TOKEN_VALIDITY = 6 * 60 * 60; // 60 minutes
 
     @Value("${jwt.secret}")
     private String secret;
@@ -55,16 +55,16 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public String generateToken(String username) {
-        // Ambil detail pengguna dari JwtUserDetailsService
+        // Retrieve user details from JwtUserDetailsService
         User user = userDetailsService.getUserDetailsForToken(username);
 
-        // Buat klaim
+        // Create claims
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
-        claims.put("role_id", user.getRole().getId()); // Pastikan bahwa role ada dan memiliki ID
+        claims.put("role_id", user.getRole().getId()); // Ensure role exists and has an ID
 
-        // Hasilkan token dengan klaim
+        // Generate token with claims
         return doGenerateToken(claims, username);
     }
 

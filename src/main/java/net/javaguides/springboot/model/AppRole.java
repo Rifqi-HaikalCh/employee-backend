@@ -1,10 +1,10 @@
 package net.javaguides.springboot.model;
 
 public enum AppRole {
-    SUPER_ADMIN("Super Admin"),
-    STAFF_ADMIN("Staff Admin"),
-    CONTROL_ADMIN("Control Admin"),
-    USER("User"),;
+    SUPER_ADMIN("super_Admin"),
+    STAFF_ADMIN("staff_Admin"),
+    CONTROL_ADMIN("control_Admin"),
+    USER("u ser"),;
 
     private final String displayName;
 
