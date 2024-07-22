@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+
 @RequestMapping("/auth")
 @RestController
-@CrossOrigin
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -56,7 +56,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new JwtResponse("", false, "", null, null));
         }
     }
-
 
     @PostMapping("/register")
     public ResponseEntity<?> saveUser(@RequestBody UserDto userDto) {

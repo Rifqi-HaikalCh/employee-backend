@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.Optional;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/v1/users")
-@CrossOrigin
 public class UserController {
 
     private final UserService userService;
@@ -24,21 +24,10 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(Principal principal) {
-        Optional<User> optionalUser = userService.findByUsername(principal.getName());
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            // Create a DTO to send only necessary fields
-            UserProfileDto userProfileDto = new UserProfileDto(
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRole().getName()
-            );
-            return ResponseEntity.ok(userProfileDto);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
+    public UserProfileDto getUserProfile(Principal principal) {
+        return userService.getUserProfile(principal.getName());
     }
 
     @DeleteMapping("/profile")

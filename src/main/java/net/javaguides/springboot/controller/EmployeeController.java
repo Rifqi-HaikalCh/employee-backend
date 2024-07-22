@@ -6,17 +6,17 @@ import net.javaguides.springboot.service.AccessService;
 import net.javaguides.springboot.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/v1/employees")
-@CrossOrigin
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -30,7 +30,6 @@ public class EmployeeController {
         this.userRepository = userRepository;
     }
 
-    // Fetch all employees - Only accessible to SUPER_ADMIN and STAFF_ADMIN
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @GetMapping
     public List<Employee> getAllEmployees(Principal principal) {
@@ -39,7 +38,6 @@ public class EmployeeController {
         return employeeService.getAllEmployees();
     }
 
-    // Create new employee - Only accessible to SUPER_ADMIN and STAFF_ADMIN
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @PostMapping
     public Employee createEmployee(@RequestBody Employee employee, Principal principal) {
@@ -48,7 +46,6 @@ public class EmployeeController {
         return employeeService.createEmployee(employee);
     }
 
-    // Update employee - Only accessible to SUPER_ADMIN and STAFF_ADMIN
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @PutMapping("/{id}")
     public Employee updateEmployee(@PathVariable Long id, @RequestBody Employee employee, Principal principal) {
@@ -57,7 +54,6 @@ public class EmployeeController {
         return employeeService.updateEmployee(id, employee);
     }
 
-    // Delete employee - Only accessible to SUPER_ADMIN and STAFF_ADMIN
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id, Principal principal) {
@@ -67,14 +63,12 @@ public class EmployeeController {
         return ResponseEntity.ok("Employee deleted successfully");
     }
 
-    // Utility method to get user ID from username
     private Long getUserId(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username))
                 .getId();
     }
 
-    // Utility method to check if the user has access to the requested resource
     private void checkAccess(Long userId, String resource) {
         Map<String, Boolean> accessMap = accessService.getUserAccess(userId);
         if (!Boolean.TRUE.equals(accessMap.get(resource))) {
@@ -82,4 +76,3 @@ public class EmployeeController {
         }
     }
 }
-

@@ -1,6 +1,7 @@
 package net.javaguides.springboot.service;
 
 import net.javaguides.springboot.dto.UserDto;
+import net.javaguides.springboot.dto.UserProfileDto;
 import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.repository.RoleRepository;
@@ -98,5 +99,13 @@ public class UserService implements UserDetailsService {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+
+    public UserProfileDto getUserProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
+
+        return new UserProfileDto(user.getUsername(), user.getEmail(), user.getRole().getDisplayName());
     }
 }

@@ -5,7 +5,6 @@ import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,13 +21,16 @@ public class AccessService {
     }
 
     public Map<String, Boolean> getUserAccess(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
         RoleEntity role = user.getRole();
 
         Map<String, Boolean> accessMap = new HashMap<>();
+        // Default pages accessible by all roles
         accessMap.put("dashboard", true);
         accessMap.put("profile", true);
 
+        // Determine access based on role
         switch (role.getName().toLowerCase()) {
             case "super_admin":
                 accessMap.put("employeeList", true);
@@ -47,8 +49,8 @@ public class AccessService {
                 accessMap.put("roleMenu", false);
                 break;
             default:
-                // Handle role not found or not supported
-                break;
+                // Optionally handle roles not defined or unknown roles
+                throw new IllegalArgumentException("Unknown role: " + role.getName());
         }
 
         return accessMap;

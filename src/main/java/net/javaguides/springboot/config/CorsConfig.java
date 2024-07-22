@@ -12,10 +12,10 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedOrigins("http://localhost:4200")  // Sesuaikan origin sesuai dengan frontend Angular Anda
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOrigins("http://localhost:4200")
                 .allowedHeaders("*")
                 .allowCredentials(true)
-                .maxAge(3600);;
+                .maxAge(3600);
     }
 }

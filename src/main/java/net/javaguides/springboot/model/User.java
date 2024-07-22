@@ -27,7 +27,7 @@ public class User {
     @Column(name = "confirmation", nullable = false)
     private String confirmation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
     private RoleEntity role;
 }
