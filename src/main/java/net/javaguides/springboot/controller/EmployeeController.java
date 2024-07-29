@@ -30,14 +30,13 @@ public class EmployeeController {
         this.userRepository = userRepository;
     }
 
-    @GetMapping("/data")
+    @GetMapping
     public List<Employee> getAllEmployees() {
         return employeeService.getAllEmployees();
     }
 
-
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @PostMapping("/cont/add")
+    @PostMapping
     public Employee createEmployee(@RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");
@@ -45,16 +44,16 @@ public class EmployeeController {
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @PutMapping("/cont/{id}")
-    public Employee updateEmployee(@PathVariable Long id, @RequestBody Employee employee, Principal principal) {
+    @PutMapping("/{id}")
+    public Employee updateEmployee(@PathVariable String id, @RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");
         return employeeService.updateEmployee(id, employee);
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
-    @DeleteMapping("/cont/{id}")
-    public ResponseEntity<?> deleteEmployee(@PathVariable Long id, Principal principal) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable String id, Principal principal) {
         Long userId = getUserId(principal.getName());
         checkAccess(userId, "employeeList");
         employeeService.deleteEmployee(id);
@@ -74,3 +73,4 @@ public class EmployeeController {
         }
     }
 }
+

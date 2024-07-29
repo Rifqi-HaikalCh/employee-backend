@@ -27,20 +27,19 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(Principal principal) {
-        Optional<String> optionalUsername = Optional.ofNullable(principal).map(Principal::getName);
+        String username = principal.getName();
 
-        return optionalUsername.map(username -> {
-            try {
-                UserProfileDto userProfile = userService.getUserProfile(username);
-                return ResponseEntity.ok(userProfile);
-            } catch (UserNotFoundException e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving user profile");
-            }
-        }).orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access"));
+        try {
+            UserProfileDto userProfile = userService.getUserProfile(username);
+            return ResponseEntity.ok(userProfile);
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving user profile");
+        }
     }
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/profile")
     public ResponseEntity<?> deleteProfile(Principal principal) {
         try {
@@ -52,3 +51,4 @@ public class UserController {
         }
     }
 }
+

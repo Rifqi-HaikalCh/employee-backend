@@ -4,10 +4,12 @@ import net.javaguides.springboot.dto.UserDto;
 import net.javaguides.springboot.dto.UserProfileDto;
 import net.javaguides.springboot.dto.UserRoleDto;
 import net.javaguides.springboot.exception.UserNotFoundException;
+import net.javaguides.springboot.model.JwtResponse;
 import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.repository.RoleRepository;
 import net.javaguides.springboot.repository.UserRepository;
+import net.javaguides.springboot.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,12 +28,18 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenUtil jwtTokenUtil; // Add JwtTokenUtil for token generation
+    private final AccessService accessService; // Add AccessService for access map
 
     @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder, JwtTokenUtil jwtTokenUtil,
+                       AccessService accessService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.accessService = accessService;
     }
 
     public User registerUser(UserDto userDto) {
@@ -69,7 +78,7 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
     }
 
-    public User loginUser(UserDto userDto) {
+    public JwtResponse loginUser(UserDto userDto) {
         User user = userRepository.findByUsername(userDto.getUsername())
                 .orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
@@ -77,7 +86,12 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Invalid username or password");
         }
 
-        return user;
+        final String token = jwtTokenUtil.generateToken(userDto.getUsername());
+
+        Map<String, Boolean> accessMap = accessService.getUserAccess(user.getId());
+
+        // Return the JwtResponse similar to the controller
+        return new JwtResponse(token, true, user.getRole().getDisplayName(), user.getEmail(), accessMap);
     }
 
     public List<UserRoleDto> getAllUserRoles() {
@@ -95,23 +109,15 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public void deleteUser(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        userRepository.delete(user);
-    }
-
-
     public UserProfileDto getUserProfile(String username) {
         return userRepository.findByUsername(username)
-                .map(user -> {
-                    UserProfileDto userProfileDto = new UserProfileDto();
-                    userProfileDto.setUsername(user.getUsername());
-                    userProfileDto.setEmail(user.getEmail());
-                    userProfileDto.setRole(user.getRole().getDisplayName());
-                    return userProfileDto;
-                })
+                .map(user -> new UserProfileDto(user.getUsername(), user.getEmail(), user.getRole().getDisplayName()))
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
+    public void deleteUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        userRepository.delete(user);
+    }
 }

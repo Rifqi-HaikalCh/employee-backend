@@ -26,8 +26,8 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    public Employee updateEmployee(Long id, Employee employee) {
-        Optional<Employee> existingEmployeeOptional = employeeRepository.findById(id);
+    public Employee updateEmployee(String id, Employee employee) {
+        Optional<Employee> existingEmployeeOptional = employeeRepository.findById(Long.parseLong(id));
         if (existingEmployeeOptional.isPresent()) {
             Employee existingEmployee = existingEmployeeOptional.get();
             existingEmployee.setFirstName(employee.getFirstName());
@@ -40,11 +40,12 @@ public class EmployeeService {
         }
     }
 
-    public void deleteEmployee(Long id) {
-        if (employeeRepository.existsById(id)) {
-            employeeRepository.deleteById(id);
+    public void deleteEmployee(String id) {
+        if (employeeRepository.existsById(Long.parseLong(id))) {
+            employeeRepository.deleteById(Long.parseLong(id));
         } else {
             throw new IllegalArgumentException("Employee not found with id: " + id);
         }
     }
 }
+

@@ -1,4 +1,5 @@
 package net.javaguides.springboot.config;
+
 import net.javaguides.springboot.security.JwtAuthenticationEntryPoint;
 import net.javaguides.springboot.security.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +50,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf().disable()
+        httpSecurity.cors().and() // Enable CORS support
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/auth/**").permitAll()
-                .antMatchers("/api/v1/users/profile").permitAll()
+                .antMatchers("/**").permitAll()
+                .antMatchers("/api/v1/users/**").permitAll()
                 .antMatchers("/dashboard").permitAll()
+                .antMatchers("/api/v1/employees/data").permitAll()
                 .antMatchers("/api/v1/employees/**").hasAnyRole("SUPER_ADMIN", "STAFF_ADMIN")
                 .antMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "CONTROL_ADMIN")
                 .anyRequest().authenticated()

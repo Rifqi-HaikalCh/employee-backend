@@ -2,7 +2,13 @@ package net.javaguides.springboot.service;
 
 import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
+import net.javaguides.springboot.repository.RoleRepository;
 import net.javaguides.springboot.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
@@ -11,12 +17,12 @@ import java.util.Map;
 @Service
 public class AccessService {
 
-    private final RoleService roleService;
+    private final RoleRepository roleRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public AccessService(RoleService roleService, UserRepository userRepository) {
-        this.roleService = roleService;
+    public AccessService(RoleRepository roleRepository, UserRepository userRepository) {
+        this.roleRepository = roleRepository;
         this.userRepository = userRepository;
     }
 
@@ -49,7 +55,6 @@ public class AccessService {
                 accessMap.put("roleMenu", false);
                 break;
             default:
-                // Optionally handle roles not defined or unknown roles
                 throw new IllegalArgumentException("Unknown role: " + role.getName());
         }
 

@@ -23,7 +23,6 @@ public class RoleController {
         this.userService = userService;
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
     @GetMapping("/users")
     public ResponseEntity<List<UserRoleDto>> getAllUsers() {
         List<UserRoleDto> users = userService.getAllUserRoles();

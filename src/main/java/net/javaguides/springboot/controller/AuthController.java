@@ -1,6 +1,7 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.dto.UserDto;
+import net.javaguides.springboot.exception.UserNotFoundException;
 import net.javaguides.springboot.model.RoleEntity;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.security.JwtTokenUtil;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -40,20 +42,22 @@ public class AuthController {
         this.accessService = accessService;
     }
 
-    // In AuthController
     @PostMapping("/authenticate")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) {
         if (authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword())) {
             final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
             final String token = jwtTokenUtil.generateToken(authenticationRequest.getUsername());
-            User user = userDetailsService.findByUsername(authenticationRequest.getUsername()).get();
+            User user = userDetailsService.findByUsername(authenticationRequest.getUsername())
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             Map<String, Boolean> accessMap = accessService.getUserAccess(user.getId());
 
-            // Ensure email is included in the response
-            return ResponseEntity.ok(new JwtResponse(token, true, userDetails.getAuthorities().toString(), user.getEmail(), accessMap));
+            // Save the login result to a variable
+            JwtResponse loginResult = new JwtResponse(token, true, userDetails.getAuthorities().toString(), user.getEmail(), accessMap);
+
+            return ResponseEntity.ok(loginResult);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new JwtResponse("", false, "", null, null));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new JwtResponse("", false, "", "", new HashMap<>()));
         }
     }
 
