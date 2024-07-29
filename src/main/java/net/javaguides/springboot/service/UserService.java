@@ -94,9 +94,13 @@ public class UserService implements UserDetailsService {
         return new JwtResponse(token, true, user.getRole().getDisplayName(), user.getEmail(), accessMap);
     }
 
-    public List<UserRoleDto> getAllUserRoles() {
+    public List<UserRoleDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserRoleDto(user.getId(), user.getUsername(), user.getRole().getDisplayName()))
+                .map(user -> new UserRoleDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole() != null ? user.getRole().getName() : "No Role"
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -107,6 +111,10 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRole(role);
         userRepository.save(user);
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
     }
 
     public UserProfileDto getUserProfile(String username) {

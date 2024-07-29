@@ -23,13 +23,17 @@ public class RoleController {
         this.userService = userService;
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<UserRoleDto>> getAllUsers() {
-        List<UserRoleDto> users = userService.getAllUserRoles();
-        return ResponseEntity.ok(users);
+    @GetMapping
+    public List<UserRoleDto> getAllUsers() {
+        return userService.getAllUsers();
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+
+//    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
     @PutMapping("/users/{id}/role")
     public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestParam Long roleId) {
         try {

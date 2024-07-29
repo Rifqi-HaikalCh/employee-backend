@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class UserRoleDto {
-    private Long id;
+    private Long id; // Change from Integer to Long
     private String username;
     private String role;
 
@@ -13,4 +13,7 @@ public class UserRoleDto {
         this.username = username;
         this.role = role;
     }
+
+    // Getters and Setters
 }
+

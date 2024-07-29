@@ -7,7 +7,6 @@ import net.javaguides.springboot.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -35,7 +34,6 @@ public class EmployeeController {
         return employeeService.getAllEmployees();
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @PostMapping
     public Employee createEmployee(@RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
@@ -43,7 +41,6 @@ public class EmployeeController {
         return employeeService.createEmployee(employee);
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @PutMapping("/{id}")
     public Employee updateEmployee(@PathVariable String id, @RequestBody Employee employee, Principal principal) {
         Long userId = getUserId(principal.getName());
@@ -51,7 +48,6 @@ public class EmployeeController {
         return employeeService.updateEmployee(id, employee);
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STAFF_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable String id, Principal principal) {
         Long userId = getUserId(principal.getName());
@@ -73,4 +69,3 @@ public class EmployeeController {
         }
     }
 }
-
