@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static net.javaguides.springboot.security.JwtRequestFilter.logger;
+
 @Service
 public class UserService implements UserDetailsService {
 
@@ -118,9 +120,22 @@ public class UserService implements UserDetailsService {
     }
 
     public UserProfileDto getUserProfile(String username) {
-        return userRepository.findByUsername(username)
-                .map(user -> new UserProfileDto(user.getUsername(), user.getEmail(), user.getRole().getDisplayName()))
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        try {
+            return userRepository.findByUsername(username)
+                    .map(user -> {
+                        if (user.getRole() == null) {
+                            throw new RuntimeException("User role is null for user: " + username);
+                        }
+                        return new UserProfileDto(user.getUsername(), user.getEmail(), user.getRole().getDisplayName());
+                    })
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+        } catch (UserNotFoundException e) {
+            throw e;  // Re-throw UserNotFoundException to be caught in the controller
+        } catch (Exception e) {
+            // Log the exception
+            logger.error("Error retrieving user profile for user: " + username, e);
+            throw new RuntimeException("Error retrieving user profile", e);
+        }
     }
 
     public void deleteUser(String username) {
