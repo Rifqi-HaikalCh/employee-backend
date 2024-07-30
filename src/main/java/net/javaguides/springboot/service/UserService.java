@@ -98,27 +98,39 @@ public class UserService implements UserDetailsService {
 
     public List<UserRoleDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserRoleDto(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getRole() != null ? user.getRole().getName() : "No Role"
-                ))
+                .map(this::mapUserToUserRoleDto)
                 .collect(Collectors.toList());
     }
 
-    public void updateUserRole(Long id, Long roleId) {
-        User user = userRepository.findById(id)
+    private UserRoleDto mapUserToUserRoleDto(User user) {
+        UserRoleDto.Roles roles = new UserRoleDto.Roles();
+        RoleEntity userRole = user.getRole();
+        if (userRole != null) {
+            roles.setUser(userRole.getName().equals("USER"));
+            roles.setSuperAdmin(userRole.getName().equals("SUPER_ADMIN"));
+            roles.setStaffAdmin(userRole.getName().equals("STAFF_ADMIN"));
+            roles.setControlAdmin(userRole.getName().equals("CONTROL_ADMIN"));
+        }
+
+        return new UserRoleDto(
+                user.getId(),
+                user.getUsername(),
+                roles
+        );
+    }
+
+    public void updateUserRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        RoleEntity role = roleRepository.findById(roleId)
+        RoleEntity role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRole(role);
         userRepository.save(user);
     }
-
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
-
     public UserProfileDto getUserProfile(String username) {
         try {
             return userRepository.findByUsername(username)

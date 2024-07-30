@@ -1,21 +1,25 @@
 package net.javaguides.springboot.controller;
 
-import net.javaguides.springboot.model.User;
+// RoleController.java
 import net.javaguides.springboot.dto.UserRoleDto;
+import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin
 @RestController
 @RequestMapping("/api/v1/roles")
 public class RoleController {
-
     private final UserService userService;
 
     @Autowired
@@ -23,24 +27,25 @@ public class RoleController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping("/users")
     public List<UserRoleDto> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/users/{id}")
     public User getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 
-//    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CONTROL_ADMIN')")
-    @PutMapping("/users/{id}/role")
-    public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestParam Long roleId) {
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestParam String roleName) {
         try {
-            userService.updateUserRole(id, roleId);
+            userService.updateUserRole(userId, roleName);
             return ResponseEntity.ok("User role updated successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user role: " + e.getMessage());
         }
     }
 }
+
+
