@@ -3,6 +3,7 @@ package net.javaguides.springboot.service;
 import net.javaguides.springboot.dto.UserDto;
 import net.javaguides.springboot.dto.UserProfileDto;
 import net.javaguides.springboot.dto.UserRoleDto;
+import net.javaguides.springboot.dto.UserRoleUpdateDto;
 import net.javaguides.springboot.exception.UserNotFoundException;
 import net.javaguides.springboot.model.JwtResponse;
 import net.javaguides.springboot.model.RoleEntity;
@@ -16,10 +17,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.javaguides.springboot.security.JwtRequestFilter.logger;
@@ -30,8 +30,8 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenUtil jwtTokenUtil; // Add JwtTokenUtil for token generation
-    private final AccessService accessService; // Add AccessService for access map
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AccessService accessService;
 
     @Autowired
     public UserService(UserRepository userRepository, RoleRepository roleRepository,
@@ -45,7 +45,6 @@ public class UserService implements UserDetailsService {
     }
 
     public User registerUser(UserDto userDto) {
-        // Validate if user already exists
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
@@ -54,7 +53,6 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Email already exists");
         }
 
-        // Validate password confirmation
         if (!userDto.getPassword().equals(userDto.getConfirmation())) {
             throw new RuntimeException("Passwords do not match");
         }
@@ -63,9 +61,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setConfirmation(passwordEncoder.encode(userDto.getConfirmation()));
 
-        // Set default role for new registrations
         RoleEntity defaultRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
         user.setRole(defaultRole);
@@ -92,7 +88,6 @@ public class UserService implements UserDetailsService {
 
         Map<String, Boolean> accessMap = accessService.getUserAccess(user.getId());
 
-        // Return the JwtResponse similar to the controller
         return new JwtResponse(token, true, user.getRole().getDisplayName(), user.getEmail(), accessMap);
     }
 
@@ -111,7 +106,6 @@ public class UserService implements UserDetailsService {
             roles.setStaffAdmin(userRole.getName().equals("STAFF_ADMIN"));
             roles.setControlAdmin(userRole.getName().equals("CONTROL_ADMIN"));
         }
-
         return new UserRoleDto(
                 user.getId(),
                 user.getUsername(),
@@ -119,18 +113,46 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public void updateUserRole(Long userId, String roleName) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        RoleEntity role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        user.setRole(role);
-        userRepository.save(user);
+    @Transactional
+    public void updateUserRoles(List<UserRoleUpdateDto> roleUpdates) {
+        validateUniqueRoles(roleUpdates);
+        for (UserRoleUpdateDto update : roleUpdates) {
+            User user = userRepository.findById(update.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + update.getUserId()));
+            RoleEntity newRole = roleRepository.findByName(update.getRoleName())
+                    .orElseThrow(() -> new RuntimeException("Role not found with name: " + update.getRoleName()));
+
+            user.setRole(newRole);
+            userRepository.save(user);
+        }
     }
+
+    private void validateUniqueRoles(List<UserRoleUpdateDto> roleUpdates) {
+        Map<Long, Set<String>> userRoleMap = new HashMap<>();
+        for (UserRoleUpdateDto update : roleUpdates) {
+            userRoleMap.computeIfAbsent(update.getUserId(), k -> new HashSet<>()).add(update.getRoleName());
+        }
+
+        for (Map.Entry<Long, Set<String>> entry : userRoleMap.entrySet()) {
+            if (entry.getValue().size() > 1) {
+                throw new RuntimeException("User " + entry.getKey() + " can only have one active role.");
+            }
+        }
+
+        List<Long> userIds = roleUpdates.stream().map(UserRoleUpdateDto::getUserId).collect(Collectors.toList());
+        List<User> users = userRepository.findAllById(userIds);
+        for (User user : users) {
+            if (user.getRole() != null && !userRoleMap.get(user.getId()).contains(user.getRole().getName())) {
+                throw new RuntimeException("User " + user.getId() + " already has an active role.");
+            }
+        }
+    }
+
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
     public UserProfileDto getUserProfile(String username) {
         try {
             return userRepository.findByUsername(username)
@@ -142,9 +164,8 @@ public class UserService implements UserDetailsService {
                     })
                     .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         } catch (UserNotFoundException e) {
-            throw e;  // Re-throw UserNotFoundException to be caught in the controller
+            throw e;
         } catch (Exception e) {
-            // Log the exception
             logger.error("Error retrieving user profile for user: " + username, e);
             throw new RuntimeException("Error retrieving user profile", e);
         }

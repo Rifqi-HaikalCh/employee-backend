@@ -2,6 +2,7 @@ package net.javaguides.springboot.controller;
 
 // RoleController.java
 import net.javaguides.springboot.dto.UserRoleDto;
+import net.javaguides.springboot.dto.UserRoleUpdateDto;
 import net.javaguides.springboot.model.User;
 import net.javaguides.springboot.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,15 +38,14 @@ public class RoleController {
         return userService.getUserById(id);
     }
 
-    @PutMapping("/users/{userId}/role")
-    public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestParam String roleName) {
+    @PutMapping("/users/roles/{id}")
+    public ResponseEntity<?> updateUserRoles(@RequestBody List<UserRoleUpdateDto> roleUpdates) {
         try {
-            userService.updateUserRole(userId, roleName);
-            return ResponseEntity.ok("User role updated successfully");
+            userService.updateUserRoles(roleUpdates);
+            return ResponseEntity.ok("User roles updated successfully");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user role: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating user roles: " + e.getMessage());
         }
     }
 }
-
 
