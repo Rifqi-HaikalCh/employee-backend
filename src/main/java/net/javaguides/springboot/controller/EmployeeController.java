@@ -1,6 +1,7 @@
 package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.model.Employee;
+import net.javaguides.springboot.model.ErrorResponse;
 import net.javaguides.springboot.repository.UserRepository;
 import net.javaguides.springboot.service.AccessService;
 import net.javaguides.springboot.service.EmployeeService;
@@ -41,10 +42,13 @@ public class EmployeeController {
         }
     }
     @PostMapping
-    public Employee createEmployee(@RequestBody Employee employee, Principal principal) {
-        Long userId = getUserId(principal.getName());
-        checkAccess(userId, "employeeList");
-        return employeeService.createEmployee(employee);
+    public ResponseEntity<?> createEmployee(@RequestBody Employee employee) {
+        try {
+            Employee savedEmployee = employeeService.createEmployee(employee);
+            return ResponseEntity.ok(savedEmployee);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Email address already exists"));
+        }
     }
 
     @PutMapping("/{id}")

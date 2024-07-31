@@ -28,7 +28,15 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
+    public boolean isEmailUnique(String emailId) {
+        // Ensure that findByEmailId returns an Employee or null
+        return employeeRepository.findByEmailId(emailId) == null;
+    }
+
     public Employee createEmployee(Employee employee) {
+        if (!isEmailUnique(employee.getEmailId())) {
+            throw new IllegalArgumentException("Email address already exists");
+        }
         return employeeRepository.save(employee);
     }
 
@@ -54,3 +62,4 @@ public class EmployeeService {
         }
     }
 }
+
