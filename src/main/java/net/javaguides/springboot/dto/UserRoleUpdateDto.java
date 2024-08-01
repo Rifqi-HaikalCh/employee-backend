@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class UserRoleUpdateDto {
-    private Long userId;
+    private Long Id;
     private String roleName;
 
     // Getters and setters

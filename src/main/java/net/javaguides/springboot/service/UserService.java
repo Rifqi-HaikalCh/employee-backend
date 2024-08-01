@@ -97,6 +97,22 @@ public class UserService implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Transactional
+    public void updateUserRole(Long userId, UserRoleUpdateDto roleUpdateDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        RoleEntity newRole = roleRepository.findByName(roleUpdateDto.getRoleName())
+                .orElseThrow(() -> new RuntimeException("Role not found with name: " + roleUpdateDto.getRoleName()));
+
+        user.setRole(newRole);
+        userRepository.save(user);
+    }
+
     private UserRoleDto mapUserToUserRoleDto(User user) {
         UserRoleDto.Roles roles = new UserRoleDto.Roles();
         RoleEntity userRole = user.getRole();
@@ -111,46 +127,6 @@ public class UserService implements UserDetailsService {
                 user.getUsername(),
                 roles
         );
-    }
-
-    @Transactional
-    public void updateUserRoles(List<UserRoleUpdateDto> roleUpdates) {
-        validateUniqueRoles(roleUpdates);
-        for (UserRoleUpdateDto update : roleUpdates) {
-            User user = userRepository.findById(update.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + update.getUserId()));
-            RoleEntity newRole = roleRepository.findByName(update.getRoleName())
-                    .orElseThrow(() -> new RuntimeException("Role not found with name: " + update.getRoleName()));
-
-            user.setRole(newRole);
-            userRepository.save(user);
-        }
-    }
-
-    private void validateUniqueRoles(List<UserRoleUpdateDto> roleUpdates) {
-        Map<Long, Set<String>> userRoleMap = new HashMap<>();
-        for (UserRoleUpdateDto update : roleUpdates) {
-            userRoleMap.computeIfAbsent(update.getUserId(), k -> new HashSet<>()).add(update.getRoleName());
-        }
-
-        for (Map.Entry<Long, Set<String>> entry : userRoleMap.entrySet()) {
-            if (entry.getValue().size() > 1) {
-                throw new RuntimeException("User " + entry.getKey() + " can only have one active role.");
-            }
-        }
-
-        List<Long> userIds = roleUpdates.stream().map(UserRoleUpdateDto::getUserId).collect(Collectors.toList());
-        List<User> users = userRepository.findAllById(userIds);
-        for (User user : users) {
-            if (user.getRole() != null && !userRoleMap.get(user.getId()).contains(user.getRole().getName())) {
-                throw new RuntimeException("User " + user.getId() + " already has an active role.");
-            }
-        }
-    }
-
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     public UserProfileDto getUserProfile(String username) {

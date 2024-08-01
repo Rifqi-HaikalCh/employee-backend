@@ -12,41 +12,41 @@ public class UserRoleDto {
     }
 
     public static class Roles {
-        private boolean user;
-        private boolean superAdmin;
-        private boolean staffAdmin;
-        private boolean controlAdmin;
+        private boolean USER;
+        private boolean SUPER_ADMIN;
+        private boolean STAFF_ADMIN;
+        private boolean CONTROL_ADMIN;
 
         public boolean isUser() {
-            return user;
+            return USER;
         }
 
         public void setUser(boolean user) {
-            this.user = user;
+            this.USER = user;
         }
 
         public boolean isSuperAdmin() {
-            return superAdmin;
+            return SUPER_ADMIN;
         }
 
         public void setSuperAdmin(boolean superAdmin) {
-            this.superAdmin = superAdmin;
+            this.SUPER_ADMIN = superAdmin;
         }
 
         public boolean isStaffAdmin() {
-            return staffAdmin;
+            return STAFF_ADMIN;
         }
 
         public void setStaffAdmin(boolean staffAdmin) {
-            this.staffAdmin = staffAdmin;
+            this.STAFF_ADMIN = staffAdmin;
         }
 
         public boolean isControlAdmin() {
-            return controlAdmin;
+            return CONTROL_ADMIN;
         }
 
         public void setControlAdmin(boolean controlAdmin) {
-            this.controlAdmin = controlAdmin;
+            this.CONTROL_ADMIN = controlAdmin;
         }
     }
 
